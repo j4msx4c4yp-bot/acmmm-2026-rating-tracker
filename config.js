@@ -1,4 +1,4 @@
 window.ACMMM_CONFIG = {
-  supabaseUrl: "https://ujwgwuybebbxtbrgdqim.supabase.co",
-  supabaseAnonKey: "sb_publishable_sqAfNmwafnO7DsFd0oyRwg_Yum9ooGr",
+  supabaseUrl: "https://rxjwazqpxrpublkwyxlp.supabase.co",
+  supabaseAnonKey: "sb_publishable_OZwctCks00Qz_Z0xnJCrKw_toaE5vUf",
 };
