@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACM MM 2026 Final Rating Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Open Rating Registry</p>
+          <h1>ACM MM 2026 Final Rating Tracker</h1>
+          <p class="subtitle">按 paper id 收集最终审稿分数，自动去重、排序、计算均分和分位点。</p>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="score-grid">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="entry-actions" aria-label="主要操作">
+        <button class="primary-action" id="showSubmit" type="button">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+          </span>
+          提交最终审稿分数
+        </button>
+        <button class="secondary-action" id="showResults" type="button">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 19h16M7 16V9m5 7V5m5 11v-4" /></svg>
+          </span>
+          查看已记录最终分数
+        </button>
+      </section>
+
+      <div class="notice" id="notice" role="status" aria-live="polite"></div>
+
+      <section class="workspace">
+        <section class="panel active" id="submitPanel" aria-labelledby="submitTitle">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Submission</p>
+              <h2 id="submitTitle">登记 paper final rating</h2>
+            </div>
+            <button class="ghost-button" id="addPaper" type="button">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+              </span>
+              添加 paper
+            </button>
+          </div>
+
+          <form id="ratingForm" class="rating-form">
+            <div id="paperRows" class="paper-rows"></div>
+            <div class="form-actions">
+              <button class="primary-action compact" type="submit">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+                保存并查看表格
+              </button>
+              <button class="secondary-action compact" id="resetForm" type="button">清空当前表单</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel" id="resultsPanel" aria-labelledby="resultsTitle">
+          <div class="panel-header results-header">
+            <div>
+              <p class="section-kicker">Recorded Scores</p>
+              <h2 id="resultsTitle">最终 rating 表格</h2>
+            </div>
+            <div class="toolbar">
+              <button class="ghost-button" id="exportData" type="button">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" /></svg>
+                </span>
+                导出 JSON
+              </button>
+              <button class="danger-button" id="clearData" type="button">清空记录</button>
+            </div>
+          </div>
+
+          <div class="results-layout">
+            <aside class="stats-panel" aria-label="实时统计">
+              <div class="stat-block">
+                <span>已记录 paper</span>
+                <strong id="paperCount">0</strong>
+              </div>
+              <div class="quantiles">
+                <div>
+                  <span>前 25% 分位点</span>
+                  <strong id="q25">-</strong>
+                </div>
+                <div>
+                  <span>前 50% 分位点</span>
+                  <strong id="q50">-</strong>
+                </div>
+                <div>
+                  <span>前 75% 分位点</span>
+                  <strong id="q75">-</strong>
+                </div>
+              </div>
+            </aside>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Paper ID</th>
+                    <th>Final ratings</th>
+                    <th>平均分</th>
+                    <th>登记时间</th>
+                  </tr>
+                </thead>
+                <tbody id="ratingsTable"></tbody>
+              </table>
+              <div class="empty-state" id="emptyState">目前还没有记录。请先提交 final rating。</div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
