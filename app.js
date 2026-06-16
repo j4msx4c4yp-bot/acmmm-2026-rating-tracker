@@ -2,6 +2,7 @@ const STORAGE_KEY = "acmmm-2026-final-ratings";
 const SEED_VERSION_KEY = "acmmm-2026-final-ratings-seed-version";
 const SEED_VERSION = "2026-06-16-screenshot-import-v1";
 const MAX_SCORES = 5;
+const AUTO_REFRESH_INTERVAL_MS = 30000;
 const SEEDED_RECORDS = [
   { paperId: "366", scores: [3, 2, 4, 4, 2] },
   { paperId: "438", scores: [4, 4, 4, 4] },
@@ -79,13 +80,18 @@ const controls = {
   addPaper: document.querySelector("#addPaper"),
   resetForm: document.querySelector("#resetForm"),
   ratingForm: document.querySelector("#ratingForm"),
+  refreshResults: document.querySelector("#refreshResults"),
   clearData: document.querySelector("#clearData"),
   exportData: document.querySelector("#exportData"),
   paperCount: document.querySelector("#paperCount"),
   q25: document.querySelector("#q25"),
   q50: document.querySelector("#q50"),
   q75: document.querySelector("#q75"),
+  lastUpdated: document.querySelector("#lastUpdated"),
 };
+
+let resultsRefreshTimer = null;
+let isRenderingResults = false;
 
 function isSupabaseConfigured() {
   const config = window.ACMMM_CONFIG || {};
@@ -245,7 +251,26 @@ function quantile(values, percentile) {
 async function showPanel(target) {
   submitPanel.classList.toggle("active", target === "submit");
   resultsPanel.classList.toggle("active", target === "results");
-  if (target === "results") await renderResults();
+  if (target === "results") {
+    startResultsAutoRefresh();
+    await renderResults();
+  } else {
+    stopResultsAutoRefresh();
+  }
+}
+
+function startResultsAutoRefresh() {
+  if (resultsRefreshTimer) return;
+  resultsRefreshTimer = window.setInterval(() => {
+    if (!resultsPanel.classList.contains("active") || document.hidden) return;
+    renderResults({ silent: true });
+  }, AUTO_REFRESH_INTERVAL_MS);
+}
+
+function stopResultsAutoRefresh() {
+  if (!resultsRefreshTimer) return;
+  window.clearInterval(resultsRefreshTimer);
+  resultsRefreshTimer = null;
 }
 
 function showNotice(message, type = "info") {
@@ -414,46 +439,57 @@ async function handleSubmit(event) {
   }
 }
 
-async function renderResults() {
-  let records = [];
-  ratingsTable.innerHTML = "";
-  emptyState.classList.add("show");
-  emptyState.textContent = "正在加载记录...";
+async function renderResults(options = {}) {
+  if (isRenderingResults) return;
+  isRenderingResults = true;
 
   try {
-    records = (await loadRecords()).sort(sortByPaperId);
-  } catch (error) {
-    emptyState.textContent = "记录加载失败，请检查 Supabase 配置和网络连接。";
-    showNotice(`加载失败：${error.message || "无法读取记录。"}`, "warning");
-    return;
+    let records = [];
+
+    if (!options.silent) {
+      ratingsTable.innerHTML = "";
+      emptyState.classList.add("show");
+      emptyState.textContent = "正在加载记录...";
+    }
+
+    try {
+      records = (await loadRecords()).sort(sortByPaperId);
+    } catch (error) {
+      emptyState.textContent = "记录加载失败，请检查 Supabase 配置和网络连接。";
+      showNotice(`加载失败：${error.message || "无法读取记录。"}`, "warning");
+      return;
+    }
+
+    ratingsTable.innerHTML = "";
+    emptyState.textContent = "目前还没有记录。请先提交 final rating。";
+    emptyState.classList.toggle("show", records.length === 0);
+
+    controls.paperCount.textContent = String(records.length);
+    const averages = records.map((record) => record.average ?? average(record.scores));
+    controls.q25.textContent = formatScore(quantile(averages, 25));
+    controls.q50.textContent = formatScore(quantile(averages, 50));
+    controls.q75.textContent = formatScore(quantile(averages, 75));
+    controls.lastUpdated.textContent = `最后刷新：${new Date().toLocaleTimeString("zh-CN", { hour12: false })}`;
+
+    records.forEach((record) => {
+      const row = document.createElement("tr");
+      const date = new Date(record.createdAt);
+      const dateText = Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("zh-CN", { hour12: false });
+      const scoreChips = record.scores
+        .map((score) => `<span class="rating-chip">${score}</span>`)
+        .join("");
+
+      row.innerHTML = `
+        <td>${escapeHtml(record.paperId)}</td>
+        <td><div class="rating-chips">${scoreChips}</div></td>
+        <td><strong>${formatScore(record.average ?? average(record.scores))}</strong></td>
+        <td>${dateText}</td>
+      `;
+      ratingsTable.append(row);
+    });
+  } finally {
+    isRenderingResults = false;
   }
-
-  ratingsTable.innerHTML = "";
-  emptyState.textContent = "目前还没有记录。请先提交 final rating。";
-  emptyState.classList.toggle("show", records.length === 0);
-
-  controls.paperCount.textContent = String(records.length);
-  const averages = records.map((record) => record.average ?? average(record.scores));
-  controls.q25.textContent = formatScore(quantile(averages, 25));
-  controls.q50.textContent = formatScore(quantile(averages, 50));
-  controls.q75.textContent = formatScore(quantile(averages, 75));
-
-  records.forEach((record) => {
-    const row = document.createElement("tr");
-    const date = new Date(record.createdAt);
-    const dateText = Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("zh-CN", { hour12: false });
-    const scoreChips = record.scores
-      .map((score) => `<span class="rating-chip">${score}</span>`)
-      .join("");
-
-    row.innerHTML = `
-      <td>${escapeHtml(record.paperId)}</td>
-      <td><div class="rating-chips">${scoreChips}</div></td>
-      <td><strong>${formatScore(record.average ?? average(record.scores))}</strong></td>
-      <td>${dateText}</td>
-    `;
-    ratingsTable.append(row);
-  });
 }
 
 function escapeHtml(value) {
@@ -493,6 +529,7 @@ controls.showResults.addEventListener("click", () => showPanel("results"));
 controls.addPaper.addEventListener("click", addPaperRow);
 controls.resetForm.addEventListener("click", resetForm);
 controls.ratingForm.addEventListener("submit", handleSubmit);
+controls.refreshResults.addEventListener("click", () => renderResults());
 controls.clearData.addEventListener("click", clearData);
 controls.exportData.addEventListener("click", exportData);
 
