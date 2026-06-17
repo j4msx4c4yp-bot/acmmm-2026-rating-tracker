@@ -319,6 +319,12 @@ h2 {
   gap: 18px;
 }
 
+.results-main {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+}
+
 .stats-panel {
   align-self: start;
   display: grid;
@@ -362,6 +368,84 @@ h2 {
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.4;
+}
+
+.distribution-panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.distribution-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.distribution-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.distribution-header span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 680;
+  white-space: nowrap;
+}
+
+.histogram {
+  min-height: 230px;
+  display: grid;
+  grid-template-columns: repeat(20, minmax(34px, 1fr));
+  align-items: end;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 8px 0 2px;
+}
+
+.histogram-bin {
+  min-width: 34px;
+  height: 210px;
+  display: grid;
+  grid-template-rows: 22px 1fr 34px;
+  gap: 6px;
+  align-items: end;
+}
+
+.histogram-count {
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+  font-weight: 760;
+  text-align: center;
+}
+
+.histogram-track {
+  height: 100%;
+  display: flex;
+  align-items: end;
+  border-radius: 6px;
+  background: #f4f7f3;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.histogram-bar {
+  width: 100%;
+  min-height: 2px;
+  height: var(--bar-height);
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+}
+
+.histogram-label {
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.15;
+  text-align: center;
 }
 
 .table-wrap {
@@ -454,6 +538,11 @@ tbody tr:last-child td {
   .results-layout,
   .paper-row {
     grid-template-columns: 1fr;
+  }
+
+  .distribution-header {
+    align-items: start;
+    flex-direction: column;
   }
 
   .panel,

@@ -115,19 +115,32 @@
               <p class="refresh-status" id="lastUpdated">尚未刷新</p>
             </aside>
 
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Paper ID</th>
-                    <th>Final ratings</th>
-                    <th>平均分</th>
-                    <th>登记时间</th>
-                  </tr>
-                </thead>
-                <tbody id="ratingsTable"></tbody>
-              </table>
-              <div class="empty-state" id="emptyState">目前还没有记录。请先提交 final rating。</div>
+            <div class="results-main">
+              <section class="distribution-panel" aria-labelledby="distributionTitle">
+                <div class="distribution-header">
+                  <div>
+                    <p class="section-kicker">Distribution</p>
+                    <h3 id="distributionTitle">平均分频率分布</h3>
+                  </div>
+                  <span>1.0-5.0，每 0.2 分一档</span>
+                </div>
+                <div class="histogram" id="scoreHistogram" aria-label="平均分频率分布直方图"></div>
+              </section>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Paper ID</th>
+                      <th>Final ratings</th>
+                      <th>平均分</th>
+                      <th>登记时间</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ratingsTable"></tbody>
+                </table>
+                <div class="empty-state" id="emptyState">目前还没有记录。请先提交 final rating。</div>
+              </div>
             </div>
           </div>
         </section>

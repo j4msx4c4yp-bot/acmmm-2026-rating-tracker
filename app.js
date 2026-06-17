@@ -3,6 +3,9 @@ const SEED_VERSION_KEY = "acmmm-2026-final-ratings-seed-version";
 const SEED_VERSION = "2026-06-16-screenshot-import-v1";
 const MAX_SCORES = 5;
 const AUTO_REFRESH_INTERVAL_MS = 30000;
+const HISTOGRAM_MIN_SCORE = 1;
+const HISTOGRAM_MAX_SCORE = 5;
+const HISTOGRAM_BIN_SIZE = 0.2;
 const SEEDED_RECORDS = [
   { paperId: "366", scores: [3, 2, 4, 4, 2] },
   { paperId: "438", scores: [4, 4, 4, 4] },
@@ -72,6 +75,7 @@ const resultsPanel = document.querySelector("#resultsPanel");
 const paperRows = document.querySelector("#paperRows");
 const notice = document.querySelector("#notice");
 const ratingsTable = document.querySelector("#ratingsTable");
+const scoreHistogram = document.querySelector("#scoreHistogram");
 const emptyState = document.querySelector("#emptyState");
 
 const controls = {
@@ -246,6 +250,53 @@ function quantile(values, percentile) {
   if (lower === upper) return sorted[lower];
   const weight = index - lower;
   return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+}
+
+function buildHistogramBins(values) {
+  const binCount = Math.round((HISTOGRAM_MAX_SCORE - HISTOGRAM_MIN_SCORE) / HISTOGRAM_BIN_SIZE);
+  const bins = Array.from({ length: binCount }, (_, index) => {
+    const min = HISTOGRAM_MIN_SCORE + index * HISTOGRAM_BIN_SIZE;
+    const max = min + HISTOGRAM_BIN_SIZE;
+    return {
+      min,
+      max,
+      label: `${min.toFixed(1)}-${max.toFixed(1)}`,
+      count: 0,
+    };
+  });
+
+  values.forEach((value) => {
+    if (!Number.isFinite(value)) return;
+    const clampedValue = Math.min(Math.max(value, HISTOGRAM_MIN_SCORE), HISTOGRAM_MAX_SCORE);
+    const index = Math.min(
+      Math.floor((clampedValue - HISTOGRAM_MIN_SCORE) / HISTOGRAM_BIN_SIZE),
+      bins.length - 1,
+    );
+    bins[index].count += 1;
+  });
+
+  return bins;
+}
+
+function renderHistogram(values) {
+  const bins = buildHistogramBins(values);
+  const maxCount = Math.max(...bins.map((bin) => bin.count), 1);
+
+  scoreHistogram.innerHTML = "";
+  bins.forEach((bin) => {
+    const height = `${Math.max((bin.count / maxCount) * 100, bin.count ? 4 : 0)}%`;
+    const item = document.createElement("div");
+    item.className = "histogram-bin";
+    item.title = `${bin.label}: ${bin.count} 篇 paper`;
+    item.innerHTML = `
+      <span class="histogram-count">${bin.count}</span>
+      <div class="histogram-track">
+        <div class="histogram-bar" style="--bar-height: ${height}"></div>
+      </div>
+      <span class="histogram-label">${bin.label}</span>
+    `;
+    scoreHistogram.append(item);
+  });
 }
 
 async function showPanel(target) {
@@ -469,6 +520,7 @@ async function renderResults(options = {}) {
     controls.q25.textContent = formatScore(quantile(averages, 25));
     controls.q50.textContent = formatScore(quantile(averages, 50));
     controls.q75.textContent = formatScore(quantile(averages, 75));
+    renderHistogram(averages);
     controls.lastUpdated.textContent = `最后刷新：${new Date().toLocaleTimeString("zh-CN", { hour12: false })}`;
 
     records.forEach((record) => {
