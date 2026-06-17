@@ -588,4 +588,4 @@ controls.exportData.addEventListener("click", exportData);
 
 seedInitialRecords();
 resetForm();
-renderResults();
+showPanel("results");
