@@ -46,7 +46,7 @@ button {
 }
 
 .hero {
-  min-height: 210px;
+  min-height: 260px;
   display: flex;
   align-items: center;
 }
