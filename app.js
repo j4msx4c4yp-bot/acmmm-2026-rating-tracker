@@ -6,6 +6,7 @@ const AUTO_REFRESH_INTERVAL_MS = 30000;
 const HISTOGRAM_MIN_SCORE = 1;
 const HISTOGRAM_MAX_SCORE = 5;
 const HISTOGRAM_BIN_SIZE = 0.2;
+const HISTOGRAM_BIN_EPSILON = 1e-9;
 const SEEDED_RECORDS = [
   { paperId: "366", scores: [3, 2, 4, 4, 2] },
   { paperId: "438", scores: [4, 4, 4, 4] },
@@ -269,7 +270,7 @@ function buildHistogramBins(values) {
     if (!Number.isFinite(value)) return;
     const clampedValue = Math.min(Math.max(value, HISTOGRAM_MIN_SCORE), HISTOGRAM_MAX_SCORE);
     const index = Math.min(
-      Math.floor((clampedValue - HISTOGRAM_MIN_SCORE) / HISTOGRAM_BIN_SIZE),
+      Math.floor((clampedValue - HISTOGRAM_MIN_SCORE) / HISTOGRAM_BIN_SIZE + HISTOGRAM_BIN_EPSILON),
       bins.length - 1,
     );
     bins[index].count += 1;
